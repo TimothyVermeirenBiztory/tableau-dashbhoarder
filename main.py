@@ -3,7 +3,7 @@ import argparse # to parse additional arguments and the mode we'll use
 # import configparser
 import logging
 import logging.handlers # For RotatingFileHandler
-import os, sys, datetime, re, json, time
+import os, sys, datetime, re, json, time, shutil
 from functions import slugify
 
 # First thing, logs directory
@@ -115,7 +115,9 @@ for source in definitions["sources"]:
                     # The path specified at the content level, or otherwise the default from args.
                     image_path = content.get("destination", {}).get("path", destination_path) # Should take care of testing if the value is provided too.
                     image_filename = content.get("destination", {}).get("filename", slugify(content["name"])) + ".png"
+                    image_filename_temp = image_filename + ".temp"
                     image_output = os.path.join(image_path, image_filename)
+                    image_output_temp = os.path.join(image_path, image_filename_temp)
                     # Let's be helpful
                     if not os.path.exists(image_path):
                         os.makedirs(image_path)
@@ -124,8 +126,9 @@ for source in definitions["sources"]:
                     logger.error(e)
                 else: # Get the image
                     try:
-                        with open(image_output, "wb") as image_file:
+                        with open(image_output_temp, "wb") as image_file:
                             image_file.write(ts_view.image)
+                        shutil.move(image_output_temp, image_output)
                     except Exception as e:
                         logger.error(f"Failed to write image to { image_output }")
                         logger.error(e)
